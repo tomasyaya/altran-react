@@ -1,23 +1,59 @@
-import logo from './logo.svg';
-import './App.css';
+import React from "react";
+import { Form } from "./components/Form";
+import { TodoList } from "./components/TodoList";
+import { useTodoList } from "./hooks/useTodoList";
+
+const initialState = {
+  inputValue: "",
+  todoList: [],
+};
+
+const data = ["tarea uno", "tarea dos", "tarea tres"];
+
+function getApiData() {
+  return new Promise((resolve) => {
+    setTimeout(() => {
+      resolve([...data]);
+    }, 2000);
+  });
+}
 
 function App() {
+  const [list, setList] = React.useState([]);
+  const callback = () => {
+    const saveList = (list) => setList(list);
+    getApiData().then(saveList);
+  };
+  console.log(list);
+  const [state, actions] = useTodoList(initialState);
+
+  React.useEffect(callback, [state.inputValue]);
+  function handleSubmit(e) {
+    e.preventDefault();
+    actions.updateTodoList(state.inputValue);
+  }
+
+  function handleChange({ target }) {
+    actions.updateInput(target.value);
+  }
+
+  function deleteItem(inputIndex) {
+    actions.deleteTodo(inputIndex);
+  }
+
   return (
     <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.js</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
-      </header>
+      <h1>TODO LIST ROD</h1>
+      <TodoList todoList={state.todoList} handleClick={deleteItem} />
+      <Form
+        inputValue={state.inputValue}
+        handleChange={handleChange}
+        handleSubmit={handleSubmit}
+      />
+      <h2>List de useEffect</h2>
+      {list.map((value, index) => (
+        <p key={index}>{value}</p>
+      ))}
     </div>
   );
 }

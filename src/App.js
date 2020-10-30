@@ -1,59 +1,43 @@
-import React from "react";
-import { Form } from "./components/Form";
-import { TodoList } from "./components/TodoList";
+import React, { useState } from "react";
+
+import RemainingItems from "./components/RemainingItems";
+import CompletedItems from "./components/CompletedItems";
+
 import { useTodoList } from "./hooks/useTodoList";
+import { getApiData } from "./mock/api";
 
 const initialState = {
   inputValue: "",
   todoList: [],
 };
 
-const data = ["tarea uno", "tarea dos", "tarea tres"];
-
-function getApiData() {
-  return new Promise((resolve) => {
-    setTimeout(() => {
-      resolve([...data]);
-    }, 2000);
-  });
-}
-
 function App() {
-  const [list, setList] = React.useState([]);
+  const [showCompleted, setShowCompleted] = useState(false);
   const callback = () => {
-    const saveList = (list) => setList(list);
-    getApiData().then(saveList);
+    getApiData().then(actions.updateTodoList);
   };
-  console.log(list);
+
+  
   const [state, actions] = useTodoList(initialState);
-
-  React.useEffect(callback, [state.inputValue]);
-  function handleSubmit(e) {
-    e.preventDefault();
-    actions.updateTodoList(state.inputValue);
+  React.useEffect(callback, []);
+  
+  function toggleView () {
+    setShowCompleted((e) => !e);
   }
 
-  function handleChange({ target }) {
-    actions.updateInput(target.value);
-  }
+  const buttonText = showCompleted
+    ? 'SHOW REMAINING'
+    : 'SHOW COMPLETED';
 
-  function deleteItem(inputIndex) {
-    actions.deleteTodo(inputIndex);
-  }
+  const _renderContent = showCompleted
+    ? <CompletedItems state={state} actions={actions} />
+    : <RemainingItems state={state} actions={actions} />;
 
   return (
     <div className="App">
       <h1>TODO LIST ROD</h1>
-      <TodoList todoList={state.todoList} handleClick={deleteItem} />
-      <Form
-        inputValue={state.inputValue}
-        handleChange={handleChange}
-        handleSubmit={handleSubmit}
-      />
-      <h2>List de useEffect</h2>
-      {list.map((value, index) => (
-        <p key={index}>{value}</p>
-      ))}
+      {_renderContent}
+      <button onClick={toggleView}>{buttonText}</button>
     </div>
   );
 }
